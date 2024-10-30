@@ -1,0 +1,42 @@
+from scapy.all import sniff
+from scapy.layers.inet import IP, TCP, UDP
+from datetime import datetime
+
+def packet_callback(packet):
+    print("\n=== Packet Captured ===")
+    
+    # Capture the packet timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"Timestamp: {timestamp}")
+    
+    # Check if the packet has an IP layer
+    if IP in packet:
+        # Extract the IP source and destination
+        src_ip = packet[IP].src
+        dst_ip = packet[IP].dst
+        print(f"Source IP: {src_ip}")
+        print(f"Destination IP: {dst_ip}")
+        
+        # Determine the protocol
+        protocol = None
+        if TCP in packet:
+            protocol = "TCP"
+        elif UDP in packet:
+            protocol = "UDP"
+        else:
+            protocol = packet[IP].proto
+
+        print(f"Protocol: {protocol}")
+        
+        # Extract payload if available
+        payload = bytes(packet[IP].payload)
+        if payload:
+            print("Payload:", payload[:50])  # Show first 50 bytes of payload for readability
+        else:
+            print("Payload: None")
+    else:
+        print("Non-IP packet")
+
+# Capture packets indefinitely, filtering only for IP, TCP, and UDP packets
+print("Starting packet capture... Press Ctrl+C to stop.")
+sniff(filter="ip", prn=packet_callback, store=False)
